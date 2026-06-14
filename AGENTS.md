@@ -68,6 +68,12 @@ python deploy_bot.py
 
 https://github.com/Ollegro/rental-ai-assistant-graduation
 
+## Сдача проекта (Zerocoder)
+
+- Образец КП: `docs/submission/КП. Пример. ТГ-бот.pdf` — **не удалять**
+- Задание курса: `docs/zerocoder-assignment.txt`
+- Подробнее: `docs/submission/README.md`
+
 ## Память между сессиями
 
 Полная история чата Cursor **не** хранится в репозитории. Актуальный контекст — **`docs/project-log.md`**. После значимых изменений агент должен дописывать туда запись (см. правило `.cursor/rules/project-memory.mdc`).
