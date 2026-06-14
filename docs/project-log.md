@@ -5,6 +5,13 @@
 
 ---
 
+## 2026-06-14 — КП PDF: переделка вёрстки (ReportLab)
+
+- PDF «КП-Джонни-Рентино.pdf» собирается через ReportLab (Arial, таблицы, заголовки, скриншоты).
+- Зависимость: `reportlab` в requirements.txt. Пересборка: `python scripts/build_submission_pack.py`.
+
+---
+
 ## 2026-06-14 — Итог сессии: бот готов, комплект сдачи, GitHub
 
 - **Бот:** https://t.me/yandworkflow_bot (@yandworkflow_bot), персона Джонни Рентино.
