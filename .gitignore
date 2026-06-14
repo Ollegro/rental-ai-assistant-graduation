@@ -1,0 +1,10 @@
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+data/faiss_index/
+data/applications.json
+*.log
+.idea/
+.vscode/
