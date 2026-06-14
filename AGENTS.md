@@ -68,6 +68,11 @@ python deploy_bot.py
 
 https://github.com/Ollegro/rental-ai-assistant-graduation
 
+## Демо
+
+- Бот: https://t.me/yandworkflow_bot (@yandworkflow_bot)
+- Группа заявок: https://t.me/testing_bots77
+
 ## Сдача проекта (Zerocoder)
 
 - Образец КП: `docs/submission/КП. Пример. ТГ-бот.pdf` — **не удалять**

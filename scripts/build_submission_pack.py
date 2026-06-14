@@ -13,6 +13,9 @@ OUT = ROOT / "сдача проекта"
 SCREENSHOTS = OUT / "скриншоты"
 GITHUB_URL = "https://github.com/Ollegro/rental-ai-assistant-graduation"
 BOT_NAME = "Джонни Рентино"
+BOT_USERNAME = "@yandworkflow_bot"
+BOT_URL = "https://t.me/yandworkflow_bot"
+MANAGER_GROUP_URL = "https://t.me/testing_bots77"
 COMPANY_PHONE = "+7 903 841 7000"
 TODAY = date.today().strftime("%d.%m.%Y")
 
@@ -98,7 +101,7 @@ def make_chat_screenshot(
     draw = ImageDraw.Draw(img)
     title_font = _font(22, bold=True)
     draw.text((24, 18), title, fill=TEXT, font=title_font)
-    draw.text((24, 48), "bot", fill=MUTED, font=_font(14))
+    draw.text((24, 48), BOT_USERNAME, fill=MUTED, font=_font(14))
 
     y = 90
     msg_font = _font(19)
@@ -134,7 +137,7 @@ def make_house_card_screenshot(path: Path) -> None:
     img.paste(photo, (20, 70))
     draw = ImageDraw.Draw(img)
     draw.text((24, 18), BOT_NAME, fill=TEXT, font=_font(22, bold=True))
-    draw.text((24, 48), "bot", fill=MUTED, font=_font(14))
+    draw.text((24, 48), BOT_USERNAME, fill=MUTED, font=_font(14))
 
     caption = (
         "🏡 Семейный дом у пляжа #8 (house-008)\n"
@@ -250,6 +253,10 @@ Telegram → bot.py → rag.py (FAISS + LangChain + LLM)
 - менеджеры получают уведомления в группу;
 - исходный код: {GITHUB_URL}
 
+**Демо:**
+- Telegram-бот: {BOT_URL} ({BOT_USERNAME})
+- Группа заявок менеджеров: {MANAGER_GROUP_URL}
+
 ---
 
 ## 5. Сроки, стоимость и условия
@@ -273,7 +280,9 @@ Telegram → bot.py → rag.py (FAISS + LangChain + LLM)
 5. Оформление заявки  
 6. Подтверждение и подарок  
 
-**GitHub:** {GITHUB_URL}
+**GitHub:** {GITHUB_URL}  
+**Бот:** {BOT_URL}  
+**Группа заявок:** {MANAGER_GROUP_URL}
 """,
         encoding="utf-8",
     )
@@ -307,6 +316,8 @@ Zerocoder · Prompt Engineering
 4. Деплой на VPS Beget (systemd rental-bot), скрипт deploy_bot.py.
 
 5. Репозиторий GitHub: {GITHUB_URL}
+6. Telegram-бот: {BOT_URL}
+7. Группа заявок: {MANAGER_GROUP_URL}
 
 ---
 
@@ -355,7 +366,8 @@ Telegram-бот с RAG для компании загородной аренды
 
 Ссылки:
 - GitHub: {GITHUB_URL}
-- Telegram: откройте бота через BotFather (токен в .env проекта)
+- Telegram-бот: {BOT_URL} ({BOT_USERNAME})
+- Группа заявок: {MANAGER_GROUP_URL}
 
 Навыки для резюме:
 Prompt Engineering · RAG · LangChain · FAISS · Python · Telegram Bots · LLM API · VPS deploy
@@ -376,9 +388,11 @@ def write_readme(path: Path) -> None:
 |---|------|------|
 | 1 | `коммерческое-предложение/КП-Джонни-Рентино.pdf` | файл КП |
 | 2 | `отчёт/отчёт-для-платформы.txt` | текст в поле сдачи |
-| 3 | {GITHUB_URL} | ссылка в отчёте |
+| 3 | {GITHUB_URL} | GitHub |
+|   | {BOT_URL} | бот {BOT_USERNAME} |
+|   | {MANAGER_GROUP_URL} | группа заявок |
 | 4 | `портфолио/описание-проекта-для-резюме.md` + ваше резюме | файлы |
-| 5 | `образец/КП. Пример. ТГ-бот.pdf` | образец от Zerocoder (для себя) |
+| 5 | `образец/КП. Пример. ТГ-бот.pdf` | образец Zerocoder (для себя) |
 
 ## Скриншоты
 
@@ -566,10 +580,13 @@ def main() -> None:
 
     write_report(OUT / "отчёт" / "отчёт-для-платформы.txt")
     write_portfolio(OUT / "портфолио" / "описание-проекта-для-резюме.md")
-    (OUT / "github" / "ссылка.txt").write_text(GITHUB_URL + "\n", encoding="utf-8")
+    (OUT / "github" / "ссылка.txt").write_text(
+        f"{GITHUB_URL}\n{BOT_URL}\n{MANAGER_GROUP_URL}\n",
+        encoding="utf-8",
+    )
     write_readme(OUT / "README.md")
     (OUT / "КАК-СДАТЬ.txt").write_text(
-        """КАК СДАТЬ ВЫПУСКНОЙ ПРОЕКТ НА ZEROCODER
+        f"""КАК СДАТЬ ВЫПУСКНОЙ ПРОЕКТ НА ZEROCODER
 ======================================
 
 1. Урок «Подведение итогов…» на university.zerocoder.ru
@@ -578,7 +595,10 @@ def main() -> None:
 
 3. Текст в поле сдачи: отчёт/отчёт-для-платформы.txt
 
-4. Ссылка GitHub: https://github.com/Ollegro/rental-ai-assistant-graduation
+4. Ссылки:
+   GitHub: {GITHUB_URL}
+   Бот: {BOT_URL} ({BOT_USERNAME})
+   Группа заявок: {MANAGER_GROUP_URL}
 
 5. Резюме + портфолио (см. портфолио/описание-проекта-для-резюме.md)
 

@@ -7,7 +7,10 @@
 
 3. Текст в поле сдачи: отчёт/отчёт-для-платформы.txt
 
-4. Ссылка GitHub: https://github.com/Ollegro/rental-ai-assistant-graduation
+4. Ссылки:
+   GitHub: https://github.com/Ollegro/rental-ai-assistant-graduation
+   Бот: https://t.me/yandworkflow_bot (@yandworkflow_bot)
+   Группа заявок: https://t.me/testing_bots77
 
 5. Резюме + портфолио (см. портфолио/описание-проекта-для-резюме.md)
 

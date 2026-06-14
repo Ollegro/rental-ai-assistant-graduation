@@ -24,6 +24,8 @@ Zerocoder · Prompt Engineering
 4. Деплой на VPS Beget (systemd rental-bot), скрипт deploy_bot.py.
 
 5. Репозиторий GitHub: https://github.com/Ollegro/rental-ai-assistant-graduation
+6. Telegram-бот: https://t.me/yandworkflow_bot
+7. Группа заявок: https://t.me/testing_bots77
 
 ---
 

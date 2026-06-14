@@ -8,9 +8,11 @@
 |---|------|------|
 | 1 | `коммерческое-предложение/КП-Джонни-Рентино.pdf` | файл КП |
 | 2 | `отчёт/отчёт-для-платформы.txt` | текст в поле сдачи |
-| 3 | https://github.com/Ollegro/rental-ai-assistant-graduation | ссылка в отчёте |
+| 3 | https://github.com/Ollegro/rental-ai-assistant-graduation | GitHub |
+|   | https://t.me/yandworkflow_bot | бот @yandworkflow_bot |
+|   | https://t.me/testing_bots77 | группа заявок |
 | 4 | `портфолио/описание-проекта-для-резюме.md` + ваше резюме | файлы |
-| 5 | `образец/КП. Пример. ТГ-бот.pdf` | образец от Zerocoder (для себя) |
+| 5 | `образец/КП. Пример. ТГ-бот.pdf` | образец Zerocoder (для себя) |
 
 ## Скриншоты
 
