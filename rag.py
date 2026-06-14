@@ -40,7 +40,7 @@ class RentalAssistant:
             model=get_chat_model(),
             api_key=api_key,
             base_url=base_url,
-            temperature=0.3,
+            temperature=0.65,
         )
 
         if self._index_exists():
@@ -88,9 +88,17 @@ class RentalAssistant:
             blocks.append(f"[Фрагмент {index}: {title}]\n{doc.page_content}")
         return "\n\n---\n\n".join(blocks)
 
-    def answer(self, question: str) -> str:
+    def answer(
+        self,
+        question: str,
+        client_context: str | None = None,
+    ) -> str:
         context = self.retrieve_context(question)
+        client_block = ""
+        if client_context:
+            client_block = f"{client_context}\n\n"
         user_message = (
+            f"{client_block}"
             "Контекст из базы знаний объектов недвижимости:\n"
             f"{context}\n\n"
             f"Вопрос клиента:\n{question}"
@@ -110,9 +118,10 @@ class RentalAssistant:
 
 def build_index(force: bool = False) -> Path:
     if force and FAISS_DIR.exists():
-        for path in FAISS_DIR.iterdir():
-            if path.is_file():
-                path.unlink()
+        import shutil
 
+        shutil.rmtree(FAISS_DIR)
+
+    FAISS_DIR.mkdir(parents=True, exist_ok=True)
     assistant = RentalAssistant()
     return FAISS_DIR

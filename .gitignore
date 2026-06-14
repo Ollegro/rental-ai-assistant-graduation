@@ -5,6 +5,8 @@ __pycache__/
 *.pyc
 data/faiss_index/
 data/applications.json
+beget-vps/ssh.local.env
+beget-vps/bot.local.env
 *.log
 .idea/
 .vscode/

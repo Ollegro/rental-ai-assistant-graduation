@@ -93,12 +93,37 @@ python bot.py
 | `config.py` | Настройки из `.env` |
 | `build_index.py` | Построение FAISS-индекса |
 | `test_rag.py` | Локальный тест ассистента |
-| `data/properties.json` | База знаний объектов |
+| `data/properties.json` | База знаний (50 объектов) |
 | `data/applications.json` | Заявки (создаётся автоматически) |
-| `data/faiss_index/` | Векторная база |
-| `prompts/system.txt` | Системный промпт ассистента |
+| `%LOCALAPPDATA%/rental-ai-assistant/faiss_index/` | Векторная база (Windows) |
+| `data/faiss_index/` | Векторная база (Linux / VPS) |
+| `deploy_bot.py` | Деплой на Beget VPS |
+| `beget-vps/` | SSH-настройки и инструкция |
 
-## Промпты
+## Деплой на Beget VPS (24/7)
+
+1. Создайте `beget-vps/ssh.local.env` из `ssh.local.env.example`.
+2. Убедитесь, что `.env` заполнен (`API_KEY`, `BOT_TOKEN`).
+3. **Остановите локальный** `python bot.py` (один токен = один polling).
+4. Деплой:
+
+```powershell
+pip install paramiko
+python deploy_bot.py
+```
+
+Бот установится в `/opt/rental-bot`, запустится как systemd-сервис `rental-bot`.
+
+Проверка на сервере:
+
+```bash
+ssh root@IP_VPS
+systemctl status rental-bot
+journalctl -u rental-bot -f
+```
+
+Подробнее: [beget-vps/DEPLOY_BOT_VPS.txt](beget-vps/DEPLOY_BOT_VPS.txt)
+
 
 Системный промпт в `prompts/system.txt` задаёт роль консультанта, правила работы с контекстом и формат ответа.
 

@@ -12,8 +12,23 @@ DATA_DIR = ROOT_DIR / "data"
 PROMPTS_DIR = ROOT_DIR / "prompts"
 PROPERTIES_FILE = DATA_DIR / "properties.json"
 APPLICATIONS_FILE = DATA_DIR / "applications.json"
-FAISS_DIR = DATA_DIR / "faiss_index"
+USERS_FILE = DATA_DIR / "users.json"
+SUNO_PROFILE_URL = "https://suno.com/@lego_1"
 SYSTEM_PROMPT_FILE = PROMPTS_DIR / "system.txt"
+
+
+def get_faiss_dir() -> Path:
+    """FAISS на Windows не пишет в пути с кириллицей — используем ASCII-кэш."""
+    custom = os.getenv("FAISS_DIR", "").strip()
+    if custom:
+        return Path(custom)
+    if os.name == "nt":
+        local_app = os.getenv("LOCALAPPDATA", str(Path.home()))
+        return Path(local_app) / "rental-ai-assistant" / "faiss_index"
+    return DATA_DIR / "faiss_index"
+
+
+FAISS_DIR = get_faiss_dir()
 
 PLACEHOLDER_KEYS = {
     "",

@@ -1,0 +1,36 @@
+ДЕПЛОЙ TELEGRAM-БОТА НА VPS BEGET
+=================================
+
+ЧТО НУЖНО
+---------
+1. VPS Beget (Ubuntu), SSH root.
+2. beget-vps/ssh.local.env (из ssh.local.env.example).
+3. .env с API_KEY и BOT_TOKEN.
+
+ДЕПЛОЙ С ПК
+-----------
+  pip install paramiko
+  python deploy_bot.py
+
+Скрипт:
+- загрузит код в /opt/rental-bot
+- создаст venv и установит зависимости
+- соберёт FAISS-индекс
+- настроит systemd-сервис rental-bot
+- запустит бота 24/7
+
+ПРОВЕРКА НА СЕРВЕРЕ
+-------------------
+  ssh root@IP_VPS
+  systemctl status rental-bot
+  journalctl -u rental-bot -f
+
+ПЕРЕЗАПУСК ПОСЛЕ ОБНОВЛЕНИЯ
+---------------------------
+  python deploy_bot.py
+
+ВАЖНО
+-----
+- Бот с одним BOT_TOKEN может работать только в одном месте (polling).
+  Остановите локальный bot.py перед деплоем на VPS.
+- Заявки сохраняются в /opt/rental-bot/data/applications.json
