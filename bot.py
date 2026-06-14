@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import re
 
-from telegram import ReplyKeyboardRemove, Update
+from telegram import Update
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -18,16 +18,17 @@ from telegram.ext import (
 from applications import save_application
 from config import get_bot_token
 from keyboards import (
-    BTN_APPLY,
-    BTN_HELP,
-    BTN_HOUSES,
-    BTN_PROFILE,
     GENDER_FEMALE,
     GENDER_MALE,
-    GENDER_NEUTRAL,
-    gender_keyboard,
-    main_menu_keyboard,
+    MENU_APPLY,
+    MENU_HELP,
+    MENU_HOUSES,
+    MENU_PROFILE,
+    inline_main_menu_keyboard,
+    remove_reply_keyboard,
+    unisex_gender_keyboard,
 )
+from name_gender import detect_name_gender
 from knowledge_base import (
     find_property_by_id,
     format_properties_summary_messages,
@@ -60,7 +61,6 @@ CANCEL_WORDS = {"отмена", "cancel", "/cancel"}
 GENDER_FROM_CALLBACK = {
     GENDER_MALE: "male",
     GENDER_FEMALE: "female",
-    GENDER_NEUTRAL: "neutral",
 }
 
 
@@ -90,20 +90,24 @@ async def send_welcome_back(update: Update, profile: dict) -> None:
     text = (
         f"Ciao, {address}! 🇮🇹 Я — {BOT_NAME}, ваш bellissimo консультант по аренде домов!\n\n"
         "Mamma mia, у нас столько прекрасных вилл — alla grande для отдыха! ☀️🏡\n\n"
-        "Выберите действие кнопками ниже или просто напишите вопрос, capisce? 😄"
+        "Выберите действие кнопками под сообщением или просто напишите вопрос, capisce? 😄"
     )
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         text,
-        reply_markup=main_menu_keyboard(),
+        reply_markup=remove_reply_keyboard,
+    )
+    await update.effective_message.reply_text(
+        "👇 Меню:",
+        reply_markup=inline_main_menu_keyboard(),
     )
 
 
 async def send_conversation_gift(update: Update, profile: dict) -> None:
     address = get_address(profile)
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"Ciao, {address}! Разговор окончен — было bellissimo пообщаться ☀️\n\n"
         f"{format_gift_message()}",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=inline_main_menu_keyboard(),
     )
 
 
@@ -118,11 +122,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     context.user_data["onboarding_step"] = ONBOARDING_NAME
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"Ciao! 🇮🇹 Я — {BOT_NAME}, ваш консультант по аренде домов!\n\n"
         "Прежде чем подбирать bellissimo виллы, познакомимся 😄\n"
         "Как вас зовут? Напишите имя:",
-        reply_markup=ReplyKeyboardRemove(),
+        reply_markup=remove_reply_keyboard,
     )
 
 
@@ -131,11 +135,42 @@ async def start_and_end_apply(update: Update, context: ContextTypes.DEFAULT_TYPE
     return ConversationHandler.END
 
 
+async def finish_onboarding(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    *,
+    name: str,
+    gender: str,
+    intro_prefix: str | None = None,
+) -> None:
+    user = update.effective_user
+    profile = save_user_profile(
+        user.id,
+        name=name,
+        gender=gender,
+        username=user.username,
+    )
+    context.user_data["profile"] = profile
+    clear_onboarding(context)
+    address = get_address(profile)
+
+    message = update.effective_message
+    if intro_prefix:
+        await message.reply_text(intro_prefix)
+
+    await message.reply_text(
+        f"Grazie mille, {address}! 🇮🇹 Perfetto!\n\n"
+        "Выберите действие кнопками под сообщением или задайте вопрос про дома:",
+        reply_markup=inline_main_menu_keyboard(),
+    )
+
+
 async def handle_onboarding_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     step = context.user_data.get("onboarding_step")
     if step == ONBOARDING_GENDER:
         await update.message.reply_text(
-            "Почти готово! Выберите кнопку: 👨 Сеньор, 👩 Сеньорита или 🤝 Просто по имени 👇"
+            "Подскажите, пожалуйста: 👨 Сеньор или 👩 Сеньорита? Выберите кнопкой 👇",
+            reply_markup=unisex_gender_keyboard(),
         )
         return
 
@@ -152,12 +187,23 @@ async def handle_onboarding_text(update: Update, context: ContextTypes.DEFAULT_T
         await update.message.reply_text("Ehm… имя слишком короткое! ☕ Напишите ещё раз:")
         return
 
+    gender = detect_name_gender(text)
+    if gender:
+        await finish_onboarding(
+            update,
+            context,
+            name=text,
+            gender=gender,
+            intro_prefix=f"Perfetto, {text}! ✨",
+        )
+        return
+
     context.user_data["pending_name"] = text
     context.user_data["onboarding_step"] = ONBOARDING_GENDER
     await update.message.reply_text(
         f"Perfetto, {text}! ✨\n\n"
-        "А как мне к вам обращаться? Выберите кнопкой 👇",
-        reply_markup=gender_keyboard(),
+        "У вас универсальное имя — подскажите, как обращаться: сеньор или сеньорита? 👇",
+        reply_markup=unisex_gender_keyboard(),
     )
 
 
@@ -178,33 +224,18 @@ async def onboard_gender(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await query.edit_message_text("Mamma mia, имя потерялось! Нажмите /start ещё раз 🙏")
         return
 
-    user = update.effective_user
-    profile = save_user_profile(
-        user.id,
-        name=name,
-        gender=gender,
-        username=user.username,
-    )
-    context.user_data["profile"] = profile
-    clear_onboarding(context)
-    address = get_address(profile)
-
-    await query.edit_message_text(f"Grazie mille, {address}! 🇮🇹 Perfetto!")
-    await query.message.reply_text(
-        f"Теперь я буду обращаться правильно — {address} 😄\n\n"
-        "Выберите действие кнопками или задайте вопрос про дома:",
-        reply_markup=main_menu_keyboard(),
-    )
+    await query.edit_message_text(f"Perfetto, {name}! ✨")
+    await finish_onboarding(update, context, name=name, gender=gender)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     profile = load_profile(context, update.effective_user.id)
     address = get_address(profile)
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"Ecco, {address}! 😄 Я — {BOT_NAME}, всегда на связи.\n\n"
         "Задайте вопрос об аренде — отвечу с душой и по фактам, grazie! 🏡\n"
         "Кнопка «✨ Оформить заявку» или /apply — alla grande! ✨",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=inline_main_menu_keyboard(),
     )
 
 
@@ -215,22 +246,22 @@ async def houses_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     parts = format_properties_summary_messages(properties)
     for index, part in enumerate(parts):
         if index == 0:
-            await update.message.reply_text(
+            await update.effective_message.reply_text(
                 f"Perfetto, {address}! Сейчас покажу все наши case 🏡🇮🇹\n\n{part}",
-                reply_markup=main_menu_keyboard() if len(parts) == 1 else None,
+                reply_markup=inline_main_menu_keyboard() if len(parts) == 1 else None,
             )
         else:
             is_last = index == len(parts) - 1
-            await update.message.reply_text(
+            await update.effective_message.reply_text(
                 part,
-                reply_markup=main_menu_keyboard() if is_last else None,
+                reply_markup=inline_main_menu_keyboard() if is_last else None,
             )
 
 
 async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     profile = load_profile(context, update.effective_user.id)
     if not profile:
-        await update.message.reply_text("Сначала познакомимся — нажмите /start 🇮🇹")
+        await update.effective_message.reply_text("Сначала познакомимся — нажмите /start 🇮🇹")
         return
 
     labels = {
@@ -239,13 +270,13 @@ async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "neutral": "просто по имени 🤝",
     }
     address = get_address(profile)
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"👤 *Ваш профиль*\n\n"
         f"Имя: {profile['name']}\n"
         f"Обращение: {address}\n"
         f"Стиль: {labels.get(profile.get('gender', 'neutral'), '—')}",
         parse_mode="Markdown",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=inline_main_menu_keyboard(),
     )
 
 
@@ -283,7 +314,7 @@ async def consult(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             f"Mamma mia, {address}, {BOT_NAME} сейчас прихворел! 😅\n"
             f"Техническая деталь: {exc}\n"
             "Попробуйте чуть позже, capisce? 🙏",
-            reply_markup=main_menu_keyboard(),
+            reply_markup=inline_main_menu_keyboard(),
         )
         return
 
@@ -292,7 +323,7 @@ async def consult(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         is_last = index == len(parts) - 1
         await update.message.reply_text(
             part,
-            reply_markup=main_menu_keyboard() if is_last else None,
+            reply_markup=inline_main_menu_keyboard() if is_last else None,
         )
 
 
@@ -304,19 +335,22 @@ async def route_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 
 async def apply_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    if update.callback_query:
+        await update.callback_query.answer()
+
     profile = load_profile(context, update.effective_user.id)
     if not profile:
-        await update.message.reply_text("Сначала /start — познакомимся, capisce? 🇮🇹")
+        await update.effective_message.reply_text("Сначала /start — познакомимся, capisce? 🇮🇹")
         return ConversationHandler.END
 
     context.user_data["application"] = {}
     address = get_address(profile)
 
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"Fantastico, {address}! Оформляем заявку с {BOT_NAME} ✨🇮🇹\n\n"
         "Сначала ID дома — кнопка «🏠 Список домов» или /houses.\n"
         "Напишите ID (например, house-001) или «отмена».",
-        reply_markup=ReplyKeyboardRemove(),
+        reply_markup=remove_reply_keyboard,
     )
     return APPLY_PROPERTY
 
@@ -329,7 +363,7 @@ async def apply_property(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if text.lower() in CANCEL_WORDS:
         await update.message.reply_text(
             f"Arrivederci, {address}! Заявка отменена 🇮🇹 alla grande в другой раз! 😊",
-            reply_markup=main_menu_keyboard(),
+            reply_markup=inline_main_menu_keyboard(),
         )
         return ConversationHandler.END
 
@@ -367,7 +401,7 @@ async def apply_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if text.lower() in CANCEL_WORDS:
         await update.message.reply_text(
             "Arrivederci, заявка отменена! 🇮🇹",
-            reply_markup=main_menu_keyboard(),
+            reply_markup=inline_main_menu_keyboard(),
         )
         return ConversationHandler.END
 
@@ -391,7 +425,7 @@ async def apply_phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     if text.lower() in CANCEL_WORDS:
         await update.message.reply_text(
             f"Arrivederci, {address}! Заявка отменена 🇮🇹",
-            reply_markup=main_menu_keyboard(),
+            reply_markup=inline_main_menu_keyboard(),
         )
         return ConversationHandler.END
 
@@ -418,7 +452,7 @@ async def apply_comment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if text.lower() in CANCEL_WORDS:
         await update.message.reply_text(
             f"Arrivederci, {address}! Заявка отменена 🇮🇹",
-            reply_markup=main_menu_keyboard(),
+            reply_markup=inline_main_menu_keyboard(),
         )
         return ConversationHandler.END
 
@@ -446,7 +480,7 @@ async def apply_comment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         f"Комментарий: {record['comment'] or '—'}\n\n"
         "Менеджер свяжется с вами alla grande — скоро! ☀️ Ciao!",
         parse_mode="Markdown",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=inline_main_menu_keyboard(),
     )
     await send_conversation_gift(update, profile)
     return ConversationHandler.END
@@ -459,7 +493,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     address = get_address(profile)
     await update.message.reply_text(
         f"Va bene, {address}, отменено! 🇮🇹 {BOT_NAME} всегда здесь! 😊",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=inline_main_menu_keyboard(),
     )
     return ConversationHandler.END
 
@@ -472,6 +506,18 @@ async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
 
 
+async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == MENU_HOUSES:
+        await houses_command(update, context)
+    elif query.data == MENU_HELP:
+        await help_command(update, context)
+    elif query.data == MENU_PROFILE:
+        await profile_command(update, context)
+
+
 def build_application() -> Application:
     token = get_bot_token()
     if not token:
@@ -482,7 +528,7 @@ def build_application() -> Application:
     apply_handler = ConversationHandler(
         entry_points=[
             CommandHandler("apply", apply_start),
-            MessageHandler(filters.Regex(re.escape(BTN_APPLY)), apply_start),
+            CallbackQueryHandler(apply_start, pattern=f"^{re.escape(MENU_APPLY)}$"),
             MessageHandler(
                 filters.Regex(re.compile(r"(оформить\s+заявку|оставить\s+заявку|хочу\s+аренд)", re.I)),
                 apply_start,
@@ -500,32 +546,21 @@ def build_application() -> Application:
         ],
     )
 
-    menu_filter = filters.Regex(
-        re.compile(
-            rf"^({re.escape(BTN_HOUSES)}|{re.escape(BTN_HELP)}|{re.escape(BTN_PROFILE)})$"
-        )
-    )
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(onboard_gender, pattern=r"^gender:"))
     app.add_handler(apply_handler)
+    app.add_handler(
+        CallbackQueryHandler(
+            menu_callback,
+            pattern=r"^menu:(houses|help|profile)$",
+        )
+    )
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("houses", houses_command))
-    app.add_handler(MessageHandler(menu_filter, _menu_router))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, route_text))
     app.add_error_handler(on_error)
 
     return app
-
-
-async def _menu_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    text = (update.message.text or "").strip()
-    if text == BTN_HOUSES:
-        await houses_command(update, context)
-    elif text == BTN_HELP:
-        await help_command(update, context)
-    elif text == BTN_PROFILE:
-        await profile_command(update, context)
 
 
 def main() -> None:

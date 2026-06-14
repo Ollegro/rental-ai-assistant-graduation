@@ -23,6 +23,7 @@ UPLOAD_PATHS = [
     "personality.py",
     "users.py",
     "keyboards.py",
+    "name_gender.py",
     "gifts.py",
     "build_index.py",
     "requirements.txt",

@@ -1,35 +1,45 @@
 from __future__ import annotations
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 
 BTN_HOUSES = "🏠 Список домов"
 BTN_APPLY = "✨ Оформить заявку"
 BTN_HELP = "❓ Помощь"
 BTN_PROFILE = "👤 Мой профиль"
 
+MENU_HOUSES = "menu:houses"
+MENU_APPLY = "menu:apply"
+MENU_HELP = "menu:help"
+MENU_PROFILE = "menu:profile"
+
 GENDER_MALE = "gender:male"
 GENDER_FEMALE = "gender:female"
 GENDER_NEUTRAL = "gender:neutral"
 
+remove_reply_keyboard = ReplyKeyboardRemove()
 
-def main_menu_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
+
+def inline_main_menu_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
         [
-            [KeyboardButton(BTN_HOUSES), KeyboardButton(BTN_APPLY)],
-            [KeyboardButton(BTN_HELP), KeyboardButton(BTN_PROFILE)],
-        ],
-        resize_keyboard=True,
-        input_field_placeholder="Спросите про дом или нажмите кнопку…",
+            [
+                InlineKeyboardButton(BTN_HOUSES, callback_data=MENU_HOUSES),
+                InlineKeyboardButton(BTN_APPLY, callback_data=MENU_APPLY),
+            ],
+            [
+                InlineKeyboardButton(BTN_HELP, callback_data=MENU_HELP),
+                InlineKeyboardButton(BTN_PROFILE, callback_data=MENU_PROFILE),
+            ],
+        ]
     )
 
 
-def gender_keyboard() -> InlineKeyboardMarkup:
+def unisex_gender_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
             [
                 InlineKeyboardButton("👨 Сеньор", callback_data=GENDER_MALE),
                 InlineKeyboardButton("👩 Сеньорита", callback_data=GENDER_FEMALE),
             ],
-            [InlineKeyboardButton("🤝 Просто по имени", callback_data=GENDER_NEUTRAL)],
         ]
     )
