@@ -496,6 +496,13 @@ def build_kp_pdf(pdf_path: Path, shots_dir: Path) -> None:
             borderPadding=8,
             spaceAfter=8,
         ),
+        "bold": ParagraphStyle(
+            "bold",
+            fontName="Arial-Bold",
+            fontSize=11,
+            leading=14,
+            spaceAfter=4,
+        ),
         "caption": ParagraphStyle(
             "caption",
             fontName="Arial-Bold",
@@ -608,7 +615,7 @@ def build_kp_pdf(pdf_path: Path, shots_dir: Path) -> None:
     # 2
     story.append(p("h1", "2. Основные функции бота"))
     story.append(p("h2", "2.1. Функциональные требования"))
-    story.append(p("body", "<b>Консультации (RAG):</b>"))
+    story.append(p("bold", "Консультации (RAG):"))
     story.extend(
         bullets(
             [
@@ -618,7 +625,7 @@ def build_kp_pdf(pdf_path: Path, shots_dir: Path) -> None:
             ]
         )
     )
-    story.append(p("body", "<b>Подбор домов:</b>"))
+    story.append(p("bold", "Подбор домов:"))
     story.extend(
         bullets(
             [
@@ -627,7 +634,7 @@ def build_kp_pdf(pdf_path: Path, shots_dir: Path) -> None:
             ]
         )
     )
-    story.append(p("body", "<b>Заявки:</b>"))
+    story.append(p("bold", "Заявки:"))
     story.extend(
         bullets(
             [
@@ -637,9 +644,9 @@ def build_kp_pdf(pdf_path: Path, shots_dir: Path) -> None:
             ]
         )
     )
-    story.append(p("body", "<b>Обратный звонок:</b>"))
+    story.append(p("bold", "Обратный звонок:"))
     story.extend(bullets(["Телефон → удобное время → описание ситуации"]))
-    story.append(p("body", "<b>Дополнительно:</b>"))
+    story.append(p("bold", "Дополнительно:"))
     story.extend(
         bullets(
             [
@@ -649,14 +656,29 @@ def build_kp_pdf(pdf_path: Path, shots_dir: Path) -> None:
         )
     )
     story.append(p("h2", "2.2. Архитектура"))
-    story.append(
-        p(
-            "mono",
-            "Telegram → bot.py → rag.py (FAISS + LangChain + LLM)<br/>"
-            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑<br/>"
-            "data/properties.json + photos",
+    arch_lines = [
+        "Telegram  →  bot.py  →  rag.py (FAISS + LangChain + LLM)",
+        "                           ↑",
+        "              data/properties.json + photos",
+    ]
+    arch_table = Table(
+        [[Paragraph(line, styles["mono"])] for line in arch_lines],
+        colWidths=[w],
+    )
+    arch_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f4f6f7")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#bdc3c7")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ]
         )
     )
+    story.append(arch_table)
+    story.append(Spacer(1, 0.2 * cm))
 
     # 3
     story.append(p("h1", "3. Реализация проекта"))
@@ -782,15 +804,13 @@ def build_pdf(md_path: Path, pdf_path: Path) -> None:
 
 
 def main() -> None:
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    OUT.mkdir()
-    (OUT / "образец").mkdir()
-    (OUT / "коммерческое-предложение").mkdir()
-    (OUT / "отчёт").mkdir()
-    (OUT / "github").mkdir()
-    (OUT / "портфолио").mkdir()
-    SCREENSHOTS.mkdir()
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "образец").mkdir(exist_ok=True)
+    (OUT / "коммерческое-предложение").mkdir(exist_ok=True)
+    (OUT / "отчёт").mkdir(exist_ok=True)
+    (OUT / "github").mkdir(exist_ok=True)
+    (OUT / "портфолио").mkdir(exist_ok=True)
+    SCREENSHOTS.mkdir(exist_ok=True)
 
     # Образец Zerocoder
     sample_src = ROOT / "docs" / "submission" / "КП. Пример. ТГ-бот.pdf"
