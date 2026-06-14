@@ -33,6 +33,13 @@ def get_address(profile: dict[str, Any] | None) -> str:
     return honorific
 
 
+def house_application_accepted_text(address: str) -> str:
+    return (
+        f"🎉 *Perfetto, {address}!* Заявка принята — *che bella cosa!* 🇮🇹✨\n\n"
+        f"{BOT_NAME} уже передал её менеджеру — скоро перезвоним *alla grande*! 📞🏡"
+    )
+
+
 def get_rag_client_context(profile: dict[str, Any] | None) -> str:
     if not profile:
         return ""

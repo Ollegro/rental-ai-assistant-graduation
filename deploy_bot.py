@@ -20,10 +20,14 @@ UPLOAD_PATHS = [
     "config.py",
     "knowledge_base.py",
     "applications.py",
+    "notifications.py",
+    "validators.py",
     "personality.py",
     "users.py",
     "keyboards.py",
     "name_gender.py",
+    "house_search.py",
+    "property_photos.py",
     "gifts.py",
     "build_index.py",
     "requirements.txt",
@@ -85,6 +89,24 @@ def upload_project(sftp: paramiko.SFTPClient, app_dir: str) -> None:
         sftp.put(str(local), remote)
 
 
+def upload_photos(sftp: paramiko.SFTPClient, app_dir: str) -> None:
+    photos_root = ROOT / "data" / "photos"
+    if not photos_root.is_dir():
+        print("upload: data/photos (skip — папки нет)")
+        return
+
+    count = 0
+    for file in photos_root.rglob("*"):
+        if not file.is_file():
+            continue
+        rel = file.relative_to(ROOT).as_posix()
+        remote = f"{app_dir}/{rel}"
+        mkdir_p_sftp(sftp, os.path.dirname(remote))
+        sftp.put(str(file), remote)
+        count += 1
+    print(f"upload: data/photos ({count} files)")
+
+
 def mkdir_p_sftp(sftp: paramiko.SFTPClient, remote_dir: str) -> None:
     parts = remote_dir.strip("/").split("/")
     path = ""
@@ -141,6 +163,7 @@ def main() -> int:
     sftp = client.open_sftp()
     run(client, f"mkdir -p {app_dir}/data {app_dir}/prompts")
     upload_project(sftp, app_dir)
+    upload_photos(sftp, app_dir)
 
     with sftp.file(f"{app_dir}/.env", "w") as remote_file:
         remote_file.write(build_server_env(app_env, app_dir))

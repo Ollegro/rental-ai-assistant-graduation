@@ -11,6 +11,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 DATA_DIR = ROOT_DIR / "data"
 PROMPTS_DIR = ROOT_DIR / "prompts"
 PROPERTIES_FILE = DATA_DIR / "properties.json"
+PHOTOS_DIR = DATA_DIR / "photos"
 APPLICATIONS_FILE = DATA_DIR / "applications.json"
 USERS_FILE = DATA_DIR / "users.json"
 SUNO_PROFILE_URL = "https://suno.com/@lego_1"
@@ -69,6 +70,39 @@ def get_bot_token() -> str | None:
     if value and value not in PLACEHOLDER_KEYS:
         return value
     return None
+
+
+def get_company_phone() -> str:
+    """Телефон компании для кнопки «Позвонить» в заявке."""
+    value = os.getenv("COMPANY_PHONE", "+7 903 841 7000").strip()
+    return value
+
+
+def get_company_phone_digits() -> str:
+    """Только цифры номера для sendContact (79038417000)."""
+    digits = "".join(ch for ch in get_company_phone() if ch.isdigit())
+    if digits.startswith("8") and len(digits) == 11:
+        digits = "7" + digits[1:]
+    return digits
+
+
+def get_company_phone_tel_url() -> str:
+    """URL tel: для inline-кнопки (на смартфоне открывает набор номера)."""
+    digits = "".join(ch for ch in get_company_phone() if ch.isdigit())
+    if digits.startswith("8") and len(digits) == 11:
+        digits = "7" + digits[1:]
+    return f"tel:+{digits}"
+
+
+def get_manager_chat_id() -> int | None:
+    """Группа менеджеров для заявок на обратный звонок."""
+    value = os.getenv("MANAGER_CHAT_ID", "-1003646706475").strip()
+    if not value:
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return None
 
 
 def load_system_prompt() -> str:
